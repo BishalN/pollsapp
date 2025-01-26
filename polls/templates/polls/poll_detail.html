@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="space-y-4">
+    <h1 class="text-xl font-bold">{{ poll.question }}</h1>
+
+    {% comment %} check user authentication {% endcomment %}
+    
+    {% if user_can_vote %}
+    <form method="post" action="{% url 'poll_vote' poll.pk %}" class="space-y-4">
+        {% csrf_token %}
+        {% for choice in poll.choices.all %}
+        <label class="block">
+            <input type="radio" name="choice" value="{{ choice.pk }}" class="mr-2">
+            {{ choice.text }}
+        </label>
+        {% endfor %}
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg">Vote</button>
+    </form>
+    {% else %}
+    <p class="text-gray-600">You've already voted on this poll.</p>
+    <a href="{% url 'poll_results' poll.pk %}" class="text-green-600">View Results</a>
+    {% endif %}
+</div>
+{% endblock %}
