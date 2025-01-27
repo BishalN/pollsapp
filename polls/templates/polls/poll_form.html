@@ -53,12 +53,15 @@ document.addEventListener('DOMContentLoaded', function() {
     addChoiceButton.addEventListener('click', function() {
         const formCount = parseInt(totalFormsInput.value);
         const newForm = choicesContainer.querySelector('.flex.items-center').cloneNode(true);
-        newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formCount);
+        newForm.innerHTML = newForm.innerHTML.replace(/form-\d+/g, `form-${formCount}`);
+        newForm.innerHTML = newForm.innerHTML.replace(/id_form-\d+/g, `id_form-${formCount}`);
         newForm.querySelectorAll('input').forEach(input => {
             input.value = '';
             if (input.type === 'checkbox') {
                 input.checked = false;
             }
+            input.name = input.name.replace(/form-\d+/, `form-${formCount}`);
+            input.id = input.id.replace(/form-\d+/, `form-${formCount}`);
         });
         choicesContainer.appendChild(newForm);
         totalFormsInput.value = formCount + 1;
