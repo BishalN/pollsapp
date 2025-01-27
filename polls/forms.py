@@ -3,7 +3,6 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import Poll, Choice
 
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
 from django import forms
 
 class SignUpForm(UserCreationForm):
@@ -33,8 +32,19 @@ class PollForm(forms.ModelForm):
     class Meta:
         model = Poll
         fields = ['question']
+        widgets = {
+            'question': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500'}),
+        }
 
 class ChoiceForm(forms.ModelForm):
     class Meta:
         model = Choice
         fields = ['text']
+        widgets = {
+            'text': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500'}),
+        }
+
+
+
+
+ChoiceFormSet = forms.modelformset_factory(Choice, form=ChoiceForm, extra=1, can_delete=True)

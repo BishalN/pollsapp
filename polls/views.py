@@ -1,17 +1,16 @@
+from django.forms import modelformset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Poll, Choice, Vote
-from .forms import SignUpForm, PollForm
+from .forms import ChoiceForm, SignUpForm, PollForm,ChoiceFormSet
 
 from django.contrib.auth import authenticate, login,logout
 
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
-        print("Signup request here:...")
         if form.is_valid():
-            print(form)
             form.save()
             return redirect('login')
         else:
@@ -28,10 +27,8 @@ def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        print("request here in login", email,password)
 
         user = authenticate(username=email, password=password)
-        print("request here in login")
         if user is not None:
             login(request, user)
             messages.success(request, 'Logged in successfully!')
@@ -49,7 +46,9 @@ def logout_view(request):
 
 def poll_list(request):
     polls = Poll.objects.all().order_by('-created_at')
+
     return render(request, 'polls/poll_list.html', {'polls': polls})
+
 
 @login_required
 def poll_create(request):
@@ -78,14 +77,27 @@ def poll_edit(request, pk):
         messages.error(request, "You can't edit this poll.")
         return redirect('poll_list')
     
+    ChoiceFormSet = modelformset_factory(Choice, form=ChoiceForm, extra=1, can_delete=True)
+    
     if request.method == 'POST':
         form = PollForm(request.POST, instance=poll)
-        if form.is_valid():
+        formset = ChoiceFormSet(request.POST, queryset=poll.choices.all())
+        if form.is_valid() and formset.is_valid():
             form.save()
+            instances = formset.save(commit=False)
+            for obj in formset.deleted_objects:
+                obj.delete()
+            for instance in instances:
+                instance.poll = poll
+                instance.save()
+            formset.save_m2m()
+            messages.success(request, 'Poll updated successfully.')
             return redirect('poll_list')
     else:
         form = PollForm(instance=poll)
-    return render(request, 'polls/poll_form.html', {'form': form, 'poll': poll})
+        formset = ChoiceFormSet(queryset=poll.choices.all())
+    
+    return render(request, 'polls/poll_form.html', {'form': form, 'formset': formset, 'poll': poll})
 
 @login_required
 def poll_delete(request, pk):
